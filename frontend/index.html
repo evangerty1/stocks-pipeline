@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRE Stocks — Daily Top Mover</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --border:   #21262d;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --green:    #3fb950;
+      --red:      #f85149;
+      --accent:   #58a6ff;
+      --font:     'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    /* ── Header ───────────────────────────────────── */
+    header {
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 32px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: #000;
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* ── Watchlist pills ──────────────────────────── */
+    .watchlist {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+    }
+
+    /* ── Main card ────────────────────────────────── */
+    .card {
+      width: 100%;
+      max-width: 800px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Table ────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      padding: 10px 20px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    thead th:last-child { text-align: right; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(88, 166, 255, 0.04); }
+
+    td {
+      padding: 14px 20px;
+      font-size: 13px;
+    }
+
+    td:last-child { text-align: right; }
+
+    .date-cell { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    .ticker-badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: monospace;
+      color: var(--accent);
+    }
+
+    .change-cell {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      font-family: monospace;
+    }
+
+    .change-cell.positive { color: var(--green); }
+    .change-cell.negative { color: var(--red); }
+
+    .change-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .change-bar-track {
+      width: 80px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .change-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .close-cell {
+      color: var(--text);
+      font-family: monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── States ───────────────────────────────────── */
+    .state {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .state-icon { font-size: 32px; margin-bottom: 12px; }
+    .state-title { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+    .state-desc { font-size: 12px; }
+
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ───────────────────────────────────── */
+    footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ───────────────────────────────── */
+    @media (max-width: 500px) {
+      .change-bar-track { display: none; }
+      thead th:nth-child(4) { display: none; }
+      td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-top">
+      <div class="logo">T</div>
+      <h1>TRE Stocks — Daily Top Mover</h1>
+    </div>
+    <div class="subtitle">The single stock from our watchlist with the highest % change each trading day.</div>
+    <div class="watchlist">
+      <span class="pill">AAPL</span>
+      <span class="pill">MSFT</span>
+      <span class="pill">GOOGL</span>
+      <span class="pill">AMZN</span>
+      <span class="pill">TSLA</span>
+      <span class="pill">NVDA</span>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Last 7 Trading Days</span>
+      <span class="card-meta" id="lastUpdated"></span>
+    </div>
+
+    <div id="tableWrap">
+      <div class="state" id="loadingState">
+        <div class="spinner"></div>
+        <div class="state-title">Loading data…</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Data via <a href="https://massive.com" target="_blank">Massive API</a> &nbsp;·&nbsp;
+    Powered by AWS Lambda + DynamoDB
+  </footer>
+
+  <script>
+    // ── Config ──────────────────────────────────────────────────────────────
+    // Replace __API_URL__ with your API Gateway URL during deployment.
+    // Example: https://abc123.execute-api.us-east-1.amazonaws.com/prod
+    const API_URL = "__API_URL__/movers";
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function formatDate(isoDate) {
+      const [y, m, d] = isoDate.split("-");
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return `${months[parseInt(m) - 1]} ${parseInt(d)}, ${y}`;
+    }
+
+    function formatChange(pct) {
+      const sign = pct >= 0 ? "+" : "";
+      return `${sign}${pct.toFixed(2)}%`;
+    }
+
+    function formatPrice(price) {
+      return `$${Number(price).toFixed(2)}`;
+    }
+
+    // ── Render ───────────────────────────────────────────────────────────────
+    function renderTable(movers) {
+      const wrap = document.getElementById("tableWrap");
+
+      if (!movers || movers.length === 0) {
+        wrap.innerHTML = `
+          <div class="state">
+            <div class="state-icon">📭</div>
+            <div class="state-title">No data yet</div>
+            <div class="state-desc">The pipeline will record its first entry tonight after market close.</div>
+          </div>`;
+        return;
+      }
+
+      // Find max abs change for proportional bars
+      const maxAbs = Math.max(...movers.map(m => Math.abs(m.percent_change)));
+
+      const rows = movers.map(m => {
+        const pct = m.percent_change;
+        const isPositive = pct >= 0;
+        const cls = isPositive ? "positive" : "negative";
+        const color = isPositive ? "var(--green)" : "var(--red)";
+        const barWidth = maxAbs > 0 ? Math.round((Math.abs(pct) / maxAbs) * 100) : 0;
+        const arrow = isPositive ? "▲" : "▼";
+
+        return `
+          <tr>
+            <td class="date-cell">${formatDate(m.date)}</td>
+            <td><span class="ticker-badge">${m.ticker}</span></td>
+            <td class="close-cell">${formatPrice(m.closing_price)}</td>
+            <td>
+              <div class="change-bar-wrap">
+                <span class="change-cell ${cls}">${arrow} ${formatChange(pct)}</span>
+                <div class="change-bar-track">
+                  <div class="change-bar-fill" style="width:${barWidth}%;background:${color}"></div>
+                </div>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Ticker</th>
+              <th>Close</th>
+              <th>% Change</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      document.getElementById("lastUpdated").textContent =
+        `Updated ${new Date().toLocaleTimeString()}`;
+    }
+
+    function renderError(msg) {
+      document.getElementById("tableWrap").innerHTML = `
+        <div class="state">
+          <div class="state-icon">⚠️</div>
+          <div class="state-title">Could not load data</div>
+          <div class="state-desc">${msg}</div>
+        </div>`;
+    }
+
+    // ── Fetch ────────────────────────────────────────────────────────────────
+    async function loadMovers() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const data = await res.json();
+        renderTable(data.movers || []);
+      } catch (err) {
+        console.error("Failed to load movers:", err);
+        renderError(err.message || "Unknown error. Check the browser console for details.");
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadMovers();
+  </script>
+
+</body>
+</html>

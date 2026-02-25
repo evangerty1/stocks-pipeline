@@ -1,0 +1,9 @@
+{
+  "StocksPipelineStack": {
+    "TableName": "stocks-movers",
+    "ApiUrl": "https://d3wiqg6wcd.execute-api.us-east-1.amazonaws.com/prod/",
+    "BucketName": "stocks-pipeline-frontend-834449050731",
+    "WebsiteUrl": "http://stocks-pipeline-frontend-834449050731.s3-website-us-east-1.amazonaws.com",
+    "StocksApiEndpoint5B2DF28E": "https://d3wiqg6wcd.execute-api.us-east-1.amazonaws.com/prod/"
+  }
+}
