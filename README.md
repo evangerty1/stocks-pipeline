@@ -1,4 +1,4 @@
-# 📈 Stocks Serverless Pipeline
+# Stocks Serverless Pipeline
 
 A fully automated AWS serverless pipeline that tracks a watchlist of tech stocks, records the biggest daily mover, and displays the history on a public website.
 
@@ -53,8 +53,6 @@ aws secretsmanager create-secret \
   --secret-string "YOUR_MASSIVE_API_KEY_HERE"
 ```
 
-> ⚠️ Never put this key in code or commit it to git.
-
 ### 4. Bootstrap CDK (first time only per AWS account/region)
 
 ```bash
@@ -105,7 +103,7 @@ aws logs tail /aws/lambda/stocks-ingestion --follow
 aws logs tail /aws/lambda/stocks-query --follow
 ```
 
-## Tear down (avoid any costs)
+## Tear down 
 
 ```bash
 cd cdk
